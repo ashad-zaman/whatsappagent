@@ -95,7 +95,9 @@ This platform follows a **microservices architecture** with event-driven communi
 
 ## 📚 Documentation
 
-- **[Main Documentation](docs/html/index.html)** - Comprehensive platform documentation
+- **[Main Documentation](docs/DOCUMENTATION.md)** - Comprehensive platform documentation (Markdown)
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with examples (Markdown)
+- **[HTML Documentation](docs/html/index.html)** - Interactive HTML documentation
 - **[API Documentation](docs/api/index.html)** - Interactive Swagger UI with request/response examples
 - **[Architecture](ARCHITECTURE.md)** - System architecture and design patterns
 - **[Development Roadmap](DEVELOPMENT_ROADMAP.md)** - Project milestones and future plans
