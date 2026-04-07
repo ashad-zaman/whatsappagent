@@ -41,12 +41,14 @@ export async function POST(request: Request) {
         orderBy: { chunkIndex: "asc" },
       });
 
-      vectorResults = chunks.map((chunk) => ({
-        id: chunk.id,
-        score: 1,
-        text: chunk.chunkText,
-        documentId: chunk.documentId,
-      }));
+      vectorResults = chunks.map(
+        (chunk: { id: string; chunkText: string; documentId: string }) => ({
+          id: chunk.id,
+          score: 1,
+          text: chunk.chunkText,
+          documentId: chunk.documentId,
+        }),
+      );
     } else {
       const chunks = await prisma.documentChunk.findMany({
         where: {
@@ -56,12 +58,14 @@ export async function POST(request: Request) {
         orderBy: { chunkIndex: "asc" },
       });
 
-      vectorResults = chunks.map((chunk) => ({
-        id: chunk.id,
-        score: 1,
-        text: chunk.chunkText,
-        documentId: chunk.documentId,
-      }));
+      vectorResults = chunks.map(
+        (chunk: { id: string; chunkText: string; documentId: string }) => ({
+          id: chunk.id,
+          score: 1,
+          text: chunk.chunkText,
+          documentId: chunk.documentId,
+        }),
+      );
     }
 
     const contextText = vectorResults
@@ -180,14 +184,23 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({
-      chunks: chunks.map((c) => ({
-        id: c.id,
-        documentId: c.documentId,
-        documentTitle: c.document.title,
-        chunkIndex: c.chunkIndex,
-        text: c.chunkText,
-        tokenCount: c.tokenCount,
-      })),
+      chunks: chunks.map(
+        (c: {
+          id: string;
+          documentId: string;
+          document: { title: string };
+          chunkIndex: number;
+          chunkText: string;
+          tokenCount: number;
+        }) => ({
+          id: c.id,
+          documentId: c.documentId,
+          documentTitle: c.document.title,
+          chunkIndex: c.chunkIndex,
+          text: c.chunkText,
+          tokenCount: c.tokenCount,
+        }),
+      ),
       totalChunks: chunks.length,
     });
   } catch (error) {

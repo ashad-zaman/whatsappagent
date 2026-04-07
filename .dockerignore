@@ -69,7 +69,6 @@ grafana*
 *.config.js
 *.config.ts
 tsconfig.json
-turbo.json
 .eslintrc*
 .prettierrc*
 

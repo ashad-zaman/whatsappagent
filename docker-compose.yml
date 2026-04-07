@@ -19,11 +19,6 @@ services:
     build:
       context: .
       dockerfile: services/api-gateway/Dockerfile
-      cache_from:
-        - whatsapp-ai/api-gateway:deps
-        - whatsapp-ai/api-gateway:builder
-      args:
-        NODE_ENV: production
     ports:
       - "3000:3000"
     environment:
@@ -63,11 +58,6 @@ services:
     build:
       context: .
       dockerfile: services/agent/Dockerfile
-      cache_from:
-        - whatsapp-ai/agent-service:deps
-        - whatsapp-ai/agent-service:builder
-      args:
-        NODE_ENV: production
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_ai
@@ -107,9 +97,6 @@ services:
     build:
       context: .
       dockerfile: services/rag/Dockerfile
-      cache_from:
-        - whatsapp-ai/rag-service:deps
-        - whatsapp-ai/rag-service:builder
       args:
         NODE_ENV: production
     environment:
@@ -154,9 +141,6 @@ services:
     build:
       context: .
       dockerfile: services/messaging/Dockerfile
-      cache_from:
-        - whatsapp-ai/messaging-service:deps
-        - whatsapp-ai/messaging-service:builder
       args:
         NODE_ENV: production
     environment:
@@ -198,9 +182,6 @@ services:
     build:
       context: .
       dockerfile: services/workflow/Dockerfile
-      cache_from:
-        - whatsapp-ai/workflow-orchestrator:deps
-        - whatsapp-ai/workflow-orchestrator:builder
       args:
         NODE_ENV: production
     environment:
@@ -242,9 +223,6 @@ services:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
-      cache_from:
-        - whatsapp-ai/dashboard:deps
-        - whatsapp-ai/dashboard:builder
       args:
         NODE_ENV: production
         NEXT_TELEMETRY_DISABLED: 1

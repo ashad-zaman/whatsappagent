@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     const isAdmin =
       user.plan === "ENTERPRISE" ||
       user.organizationMemberships.some(
-        (m) => m.role === "OWNER" || m.role === "ADMIN",
+        (m: { role: string }) => m.role === "OWNER" || m.role === "ADMIN",
       );
     const role = isAdmin ? "ADMIN" : "USER";
 

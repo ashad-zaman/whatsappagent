@@ -8,7 +8,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-RUN npm install -g pnpm@9@latest
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/*/package.json packages/
@@ -20,12 +20,12 @@ RUN pnpm install --frozen-lockfile --prod=false
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+RUN npm install -g pnpm@9.15.9
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
 COPY --from=deps /app/services ./services
 COPY . .
-
-RUN pnpm build --filter=@whatsapp-ai/messaging-service
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
@@ -37,13 +37,13 @@ ENV NODE_OPTIONS="--max-old-space-size=768"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 messaging
 
-RUN apk add --no-cache dumb-init tini
+RUN apk add --no-cache dumb-init tini && npm install -g tsx
 
-COPY --from=builder --chown=messaging:nodejs /app/services/messaging/dist ./dist
+COPY --from=builder --chown=messaging:nodejs /app/services/messaging/src ./src
 COPY --from=builder --chown=messaging:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=messaging:nodejs /app/packages ./packages
 
-RUN chown -R messaging:messaging /app
+RUN chown -R 1001:1001 /app
 
 USER messaging
 
@@ -53,4 +53,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 EXPOSE 3003
 
 ENTRYPOINT ["tini", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["tsx", "src/index.ts"]

@@ -9,7 +9,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Install pnpm globally
-RUN npm install -g pnpm@9@latest
+RUN npm install -g pnpm@9.15.9
 
 # Copy only package files first for better layer caching
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -24,6 +24,9 @@ RUN pnpm install --frozen-lockfile --prod=false
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Install pnpm globally in builder stage
+RUN npm install -g pnpm@9.15.9
+
 # Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
@@ -32,9 +35,6 @@ COPY --from=deps /app/apps ./apps
 
 # Copy source code
 COPY . .
-
-# Build the service
-RUN pnpm build --filter=@whatsapp-ai/api-gateway
 
 # Stage 3: Runner - Minimal production image
 FROM node:20-alpine AS runner
@@ -47,11 +47,11 @@ ENV NODE_OPTIONS="--max-old-space-size=512"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and tsx for running TypeScript directly
+RUN apk add --no-cache dumb-init && npm install -g tsx
 
-# Copy built artifacts
-COPY --from=builder --chown=nextjs:nodejs /app/services/api-gateway/dist ./dist
+# Copy source code and node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/services/api-gateway/src ./src
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/packages ./packages
 
@@ -67,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 3000
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/index.js"]
+CMD ["tsx", "src/index.ts"]

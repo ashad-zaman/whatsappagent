@@ -445,52 +445,114 @@ AI: 📋 Your reminders for today:
 ### Prerequisites
 
 - Node.js 20+
-- pnpm 9+
+- pnpm 9.15+
 - Docker Desktop
-- kubectl 1.28+
+- Docker Compose
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/whatsapp-ai/platform.git
-cd platform
+cd /Users/ashaduzzaman/sites/bekredito/whatsappagent
+
+# Install pnpm if needed
+npm install -g pnpm@9.15.9
 
 # Install dependencies
 pnpm install
 
-# Copy environment variables
-cp .env.example .env.local
+# The root .env file is already configured for Docker-based setup
+# You can customize it if needed: nano .env
+```
 
-# Start infrastructure services
-docker-compose up -d postgres mongodb redis kafka zookeeper qdrant neo4j temporal
+### Start Infrastructure Services
 
-# Start development servers
-pnpm dev
+```bash
+# Start all required infrastructure services
+docker-compose up -d postgres redis qdrant neo4j kafka temporal
+
+# Verify services are running
+docker-compose ps
+```
+
+### Build and Run Services
+
+```bash
+# Build all Docker images
+make build
+
+# Start all services
+docker-compose up -d
+
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+### Available Make Commands
+
+```bash
+# Show all available commands
+make help
+
+# Build all services
+make build
+
+# Build specific service
+make build-service SERVICE=api-gateway
+
+# Build without cache
+make build-no-cache
+
+# Build production images
+make build-prod
+
+# View logs
+make logs SERVICE=api-gateway
+
+# Shell into container
+make shell SERVICE=api-gateway
+
+# Clean up
+make clean
 ```
 
 ### Environment Variables
 
 ```bash
-# Core
-NODE_ENV=development
-PORT=3000
+# The root .env file is pre-configured for Docker setup
+# Key variables (already set in .env):
 
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/whatsapp_ai
-MONGODB_URL=mongodb://localhost:27017/whatsapp_ai
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_ai
 
-# WhatsApp
-WHATSAPP_ACCESS_TOKEN=your-token
-WHATSAPP_WEBHOOK_VERIFY_TOKEN=your-verify-token
-
-# AI
-OPENAI_API_KEY=sk-your-api-key
+# Redis
+REDIS_URL=redis://redis:6379
 
 # JWT
-JWT_SECRET=your-secret-key-min-256-bits
+JWT_SECRET=your-super-secret-jwt-key-min-256-bits
+
+# For production, update these values in .env:
+# - NODE_ENV=production
+# - JWT_SECRET=<generate-secure-key>
+# - OPENAI_API_KEY=sk-your-key
+# - WHATSAPP_* variables
+# - STRIPE_* variables
 ```
+
+### Service URLs
+
+| Service       | URL                             |
+| ------------- | ------------------------------- |
+| API Gateway   | http://localhost:3000           |
+| Dashboard     | http://localhost:3001           |
+| Swagger UI    | http://localhost:3000/api/docs  |
+| Qdrant UI     | http://localhost:6333/dashboard |
+| Neo4j Browser | http://localhost:7474           |
+
+---
 
 ---
 
@@ -650,6 +712,182 @@ apps/dashboard/src/
 | `./scripts/deploy.sh [environment]` | Deploy to dev/staging/production                                                   |
 | `./scripts/health-check.sh`         | Checks health status of all services                                               |
 | `./scripts/migrate.sh [command]`    | Database migration management (status, up, down, deploy, create)                   |
+
+---
+
+## Development Environment
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm 9.15+
+- Docker & Docker Compose
+- 8GB+ RAM recommended
+
+### Quick Start
+
+```bash
+# 1. Install dependencies
+cd /Users/ashaduzzaman/sites/bekredito/whatsappagent
+pnpm install
+
+# 2. Start infrastructure services
+docker-compose up -d postgres redis qdrant neo4j kafka temporal
+
+# 3. Build all services
+make build
+
+# 4. Start all services
+docker-compose up -d
+```
+
+### Individual Service Development
+
+```bash
+# Build a specific service
+make build-service SERVICE=api-gateway
+
+# Run a specific service with live logs
+docker-compose up -f api-gateway
+
+# Shell into a running container
+make shell SERVICE=api-gateway
+
+# View specific service logs
+make logs SERVICE=api-gateway
+```
+
+### Environment Configuration
+
+The root `.env` file is pre-configured for Docker-based development. Key variables:
+
+```bash
+# Database
+DATABASE_URL=postgresql://postgres:postgres@postgres:5432/whatsapp_ai
+
+# Redis
+REDIS_URL=redis://redis:6379
+
+# JWT (change for production)
+JWT_SECRET=your-super-secret-jwt-key-min-256-bits
+```
+
+### Accessing Services
+
+| Service     | URL                            |
+| ----------- | ------------------------------ |
+| API Gateway | http://localhost:3000          |
+| Dashboard   | http://localhost:3001          |
+| Swagger UI  | http://localhost:3000/api/docs |
+| Qdrant      | http://localhost:6333          |
+| Neo4j       | http://localhost:7474          |
+
+### Troubleshooting
+
+```bash
+# Clean and rebuild everything
+make clean
+make build
+
+# Check service status
+docker-compose ps
+
+# View all logs
+docker-compose logs -f
+
+# Restart a specific service
+docker-compose restart api-gateway
+```
+
+---
+
+## Production Environment
+
+### 1. Build Production Images
+
+```bash
+# Build production-optimized images with BuildKit
+make build-prod
+
+# Or build without cache (for fresh builds)
+make build-no-cache
+```
+
+### 2. Configure Production Environment
+
+Create/update `.env` with production values:
+
+```bash
+# Core
+NODE_ENV=production
+PORT=3000
+
+# Database (use managed service URL)
+DATABASE_URL=postgresql://user:password@prod-db:5432/whatsapp_ai
+
+# Redis (use managed service URL)
+REDIS_URL=redis://prod-redis:6379
+
+# JWT (generate secure key)
+JWT_SECRET=$(openssl rand -base64 32)
+
+# OpenAI
+OPENAI_API_KEY=sk-your-production-key
+
+# WhatsApp
+WHATSAPP_PHONE_NUMBER_ID=your-phone-number-id
+WHATSAPP_BUSINESS_ACCOUNT_ID=your-business-account-id
+WHATSAPP_ACCESS_TOKEN=your-production-token
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=your-verify-token
+
+# Stripe
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Vector DB
+VECTOR_DB_URL=http://qdrant:6333
+VECTOR_DB_API_KEY=your-qdrant-key
+
+# Neo4j
+NEO4J_URI=bolt://neo4j:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your-secure-password
+```
+
+### 3. Start Production Services
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Scale services as needed
+docker-compose up -d --scale agent-service=3 --scale rag-service=2
+```
+
+### 4. Verify Deployment
+
+```bash
+# Check all services are running
+docker-compose ps
+
+# Check health endpoints
+curl http://localhost:3000/health
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
+curl http://localhost:3004/health
+
+# View logs
+docker-compose logs -f
+```
+
+### 5. Production Considerations
+
+- **Security**: Use secrets management (Kubernetes secrets, AWS Secrets Manager)
+- **Monitoring**: Configure Prometheus/Grafana for metrics
+- **Logging**: Set up centralized logging (Loki, ELK)
+- **Backups**: Schedule regular database backups
+- **SSL/TLS**: Configure SSL certificates via ingress
 
 ---
 
